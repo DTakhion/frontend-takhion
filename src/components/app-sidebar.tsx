@@ -164,6 +164,11 @@ const data = {
       icon: Bot,
     },
     {
+      title: 'Servicios', // Servicios (23/03/2026)
+      url: '/services',
+      icon: BookOpen,
+    },
+    {
       title: 'Settings',
       url: '#',
       icon: Settings2,

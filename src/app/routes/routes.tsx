@@ -53,6 +53,8 @@ import SegmentacionPage from '@/app/clients/segmentacion-page';
 import { SegmentacionCanastasPage } from '@/app/clients/segmentacion-canastas-page';
 //nueva pagina para pagina de xapity
 import XapityPage from '@/app/xapity/xapity-page';
+//nueva pagina para pagina de servicios
+import ServicesPage from '../xapity/services-page';
 
 // ✅ NUEVO: página para recomendaciones favoritas
 import { RecommendationPage } from '@/app/campaigns/components/recommendation-favorite';
@@ -72,7 +74,9 @@ export const router = createBrowserRouter([
       { path: 'clientes/segmentacion', Component: SegmentacionPage },
       { path: 'clients/segmentacion-canastas', Component: SegmentacionCanastasPage },
       //Ruta hacia pagina de xapity
-      { path: 'xapity', Component: XapityPage}
+      { path: 'xapity', Component: XapityPage},
+      //Ruta hacia pagina de servicios (23-03-2026)
+      { path: 'services', Component: ServicesPage},
     ]
   },
   { path: '/login', Component: LoginPage },

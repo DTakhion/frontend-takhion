@@ -26,7 +26,8 @@ export default function XapityPage() {
 
       //const url = `${PREFIX}/llm/generate`
 
-      const res = await fetch("http://localhost:8000/llm/generate", {
+      const API_URL = import.meta.env.VITE_XAPITY_API_URL;
+      const res = await fetch(`${API_URL}/llm/generate`,{
         method: "POST",
         headers: {
           "Content-Type": "application/json",

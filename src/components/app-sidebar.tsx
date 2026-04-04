@@ -8,6 +8,7 @@ import {
   Settings2,
   ChartLine,
   Megaphone,
+  Camera,
   Users,
 } from 'lucide-react';
 import { NavMain } from '@/components/nav-main';
@@ -167,6 +168,11 @@ const data = {
       title: 'Servicios', // Servicios (23/03/2026)
       url: '/services',
       icon: BookOpen,
+    },
+    {
+      title: 'Vision',
+      url: '/vision',
+      icon: Camera,
     },
     {
       title: 'Settings',

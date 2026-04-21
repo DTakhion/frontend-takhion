@@ -1,346 +1,4 @@
-// import { useState } from "react";
-
-// const API_BASE = "http://127.0.0.1:8000";
-
-// type CaptureEvent = {
-//   event_dir: string;
-//   event_json?: string | null;
-//   frame_path: string;
-//   frame_url?: string | null;
-//   readout_json?: string | null;
-//   readout_json_url?: string | null;
-//   readout_vis?: string | null;
-//   readout_vis_url?: string | null;
-// };
-
-// type CaptureResponse = {
-//   status?: string;
-//   message?: string;
-//   session_dir?: string;
-//   session_dir_url?: string | null;
-//   event?: CaptureEvent;
-//   detail?: unknown;
-// };
-
-// type ProcessResponse = {
-//   status?: string;
-//   message?: string;
-//   event?: {
-//     event_dir: string;
-//     frame_path?: string | null;
-//     frame_url?: string | null;
-//     readout_json?: string | null;
-//     readout_json_url?: string | null;
-//     readout_vis?: string | null;
-//     readout_vis_url?: string | null;
-//     closure_output?: string | null;
-//     closure_output_url?: string | null;
-//   };
-//   session_state_json?: string | null;
-//   session_state_json_url?: string | null;
-//   frontend_summary?: unknown;
-//   operator_feedback?: unknown;
-//   session?: unknown;
-//   closure_result?: unknown;
-//   detail?: unknown;
-// };
-
-// type ResetResponse = {
-//   status?: string;
-//   message?: string;
-//   session_state_json?: string | null;
-//   session_state_json_url?: string | null;
-//   session?: unknown;
-//   detail?: unknown;
-// };
-
-// function buildAbsoluteUrl(pathOrUrl?: string | null): string | null {
-//   if (!pathOrUrl) return null;
-
-//   if (pathOrUrl.startsWith("http://") || pathOrUrl.startsWith("https://")) {
-//     return pathOrUrl;
-//   }
-
-//   if (pathOrUrl.startsWith("/")) {
-//     return `${API_BASE}${pathOrUrl}`;
-//   }
-
-//   return `${API_BASE}/${pathOrUrl}`;
-// }
-
-// function extractErrorMessage(data: unknown, fallback: string): string {
-//   if (!data) return fallback;
-
-//   if (typeof data === "string") return data;
-
-//   if (typeof data === "object" && data !== null) {
-//     const obj = data as Record<string, unknown>;
-
-//     if (typeof obj.error === "string") return obj.error;
-//     if (typeof obj.message === "string") return obj.message;
-//     if (typeof obj.detail === "string") return obj.detail;
-
-//     if (obj.detail && typeof obj.detail === "object") {
-//       try {
-//         return JSON.stringify(obj.detail, null, 2);
-//       } catch {
-//         return fallback;
-//       }
-//     }
-//   }
-
-//   return fallback;
-// }
-
-// export default function VisionPage() {
-//   const [captureLoading, setCaptureLoading] = useState(false);
-//   const [processLoading, setProcessLoading] = useState(false);
-//   const [resetLoading, setResetLoading] = useState(false);
-
-//   const [error, setError] = useState<string | null>(null);
-
-//   const [captureData, setCaptureData] = useState<CaptureResponse | null>(null);
-//   const [processData, setProcessData] = useState<ProcessResponse | null>(null);
-//   const [resetData, setResetData] = useState<ResetResponse | null>(null);
-
-//   const [capturedImageUrl, setCapturedImageUrl] = useState<string | null>(null);
-//   const [processedImageUrl, setProcessedImageUrl] = useState<string | null>(null);
-
-//   const handleCapture = async () => {
-//     setCaptureLoading(true);
-//     setError(null);
-//     setResetData(null);
-//     setProcessData(null);
-//     setProcessedImageUrl(null);
-//     setCapturedImageUrl(null);
-
-//     try {
-//       const response = await fetch(`${API_BASE}/vision/capture`, {
-//         method: "POST",
-//       });
-
-//       const data: CaptureResponse = await response.json();
-//       console.log("Capture response:", data);
-
-//       if (!response.ok) {
-//         throw new Error(extractErrorMessage(data, "Error en captura"));
-//       }
-
-//       setCaptureData(data);
-
-//       const imageUrl =
-//         buildAbsoluteUrl(data?.event?.frame_url) ??
-//         buildAbsoluteUrl(data?.event?.frame_path) ??
-//         null;
-
-//       setCapturedImageUrl(imageUrl);
-//     } catch (err) {
-//       const msg =
-//         err instanceof Error ? err.message : "Error desconocido en captura";
-//       console.error("Error capturando:", msg);
-//       setError(msg);
-//     } finally {
-//       setCaptureLoading(false);
-//     }
-//   };
-
-//   const handleProcess = async () => {
-//     if (!captureData?.event?.event_dir) {
-//       setError("No hay una captura disponible para procesar.");
-//       return;
-//     }
-
-//     setProcessLoading(true);
-//     setError(null);
-//     setResetData(null);
-//     setProcessData(null);
-//     setProcessedImageUrl(null);
-
-//     try {
-//       const response = await fetch(`${API_BASE}/vision/process`, {
-//         method: "POST",
-//         headers: {
-//           "Content-Type": "application/json",
-//         },
-//         body: JSON.stringify({
-//           event_dir: captureData.event.event_dir,
-//         }),
-//       });
-
-//       const data: ProcessResponse = await response.json();
-//       console.log("Process response:", data);
-
-//       if (!response.ok) {
-//         throw new Error(extractErrorMessage(data, "Error al procesar captura"));
-//       }
-
-//       setProcessData(data);
-
-//       const annotatedUrl =
-//         buildAbsoluteUrl(data?.event?.readout_vis_url) ??
-//         buildAbsoluteUrl(data?.event?.readout_vis) ??
-//         null;
-
-//       setProcessedImageUrl(annotatedUrl);
-//     } catch (err) {
-//       const msg =
-//         err instanceof Error ? err.message : "Error desconocido en procesamiento";
-//       console.error("Error procesando:", msg);
-//       setError(msg);
-//     } finally {
-//       setProcessLoading(false);
-//     }
-//   };
-
-//   const handleResetSession = async () => {
-//     setResetLoading(true);
-//     setError(null);
-
-//     try {
-//       const response = await fetch(`${API_BASE}/vision/session/reset`, {
-//         method: "POST",
-//       });
-
-//       const data: ResetResponse = await response.json();
-//       console.log("Reset response:", data);
-
-//       if (!response.ok) {
-//         throw new Error(
-//           extractErrorMessage(data, "Error al reiniciar sesión")
-//         );
-//       }
-
-//       setResetData(data);
-//       setCaptureData(null);
-//       setProcessData(null);
-//       setCapturedImageUrl(null);
-//       setProcessedImageUrl(null);
-//     } catch (err) {
-//       const msg =
-//         err instanceof Error
-//           ? err.message
-//           : "Error desconocido al reiniciar sesión";
-//       console.error("Error reseteando sesión:", msg);
-//       setError(msg);
-//     } finally {
-//       setResetLoading(false);
-//     }
-//   };
-
-//   return (
-//     <div style={{ padding: 20 }}>
-//       <h1>Vision Scanner</h1>
-
-//       <div
-//         style={{
-//           display: "flex",
-//           gap: 12,
-//           marginTop: 16,
-//           marginBottom: 16,
-//         }}
-//       >
-//         <button
-//           onClick={handleCapture}
-//           disabled={captureLoading || processLoading || resetLoading}
-//         >
-//           {captureLoading ? "Capturando..." : "Capturar"}
-//         </button>
-
-//         <button
-//           onClick={handleProcess}
-//           disabled={
-//             processLoading ||
-//             captureLoading ||
-//             resetLoading ||
-//             !captureData?.event?.event_dir
-//           }
-//         >
-//           {processLoading ? "Procesando..." : "Procesar"}
-//         </button>
-
-//         <button
-//           onClick={handleResetSession}
-//           disabled={resetLoading || captureLoading || processLoading}
-//         >
-//           {resetLoading ? "Reiniciando..." : "Reiniciar sesión"}
-//         </button>
-//       </div>
-
-//       {error && (
-//         <div style={{ marginTop: 20, color: "red", whiteSpace: "pre-wrap" }}>
-//           {error}
-//         </div>
-//       )}
-
-//       {capturedImageUrl && (
-//         <div style={{ marginTop: 20 }}>
-//           <h3>Imagen capturada</h3>
-//           <img
-//             src={capturedImageUrl}
-//             alt="Captura"
-//             width={500}
-//             style={{
-//               borderRadius: 10,
-//               border: "1px solid #ddd",
-//             }}
-//           />
-//         </div>
-//       )}
-
-//       {processedImageUrl && (
-//         <div style={{ marginTop: 20 }}>
-//           <h3>Imagen procesada</h3>
-//           <img
-//             src={processedImageUrl}
-//             alt="Procesada"
-//             width={500}
-//             style={{
-//               borderRadius: 10,
-//               border: "1px solid #ddd",
-//             }}
-//           />
-//         </div>
-//       )}
-
-//       {Boolean(processData?.frontend_summary) && (
-//         <div style={{ marginTop: 24 }}>
-//           <h3>Resumen frontend</h3>
-//           <pre>{JSON.stringify(processData?.frontend_summary, null, 2)}</pre>
-//         </div>
-//       )}
-
-//       {Boolean(processData?.operator_feedback) && (
-//         <div style={{ marginTop: 24 }}>
-//           <h3>Feedback operador</h3>
-//           <pre>{JSON.stringify(processData?.operator_feedback, null, 2)}</pre>
-//         </div>
-//       )}
-
-//       {captureData && (
-//         <div style={{ marginTop: 24 }}>
-//           <h3>Respuesta captura</h3>
-//           <pre>{JSON.stringify(captureData, null, 2)}</pre>
-//         </div>
-//       )}
-
-//       {processData && (
-//         <div style={{ marginTop: 24 }}>
-//           <h3>Respuesta procesamiento</h3>
-//           <pre>{JSON.stringify(processData, null, 2)}</pre>
-//         </div>
-//       )}
-
-//       {resetData && (
-//         <div style={{ marginTop: 24 }}>
-//           <h3>Respuesta reinicio sesión</h3>
-//           <pre>{JSON.stringify(resetData, null, 2)}</pre>
-//         </div>
-//       )}
-//     </div>
-//   );
-// }
-
-import { useMemo, useState } from "react";
+import { useMemo, useState, type CSSProperties } from "react";
 import { ClosureSummary } from "@/components/vision/ClosureSummary";
 import { DetectedBarcodes } from "@/components/vision/DetectedBarcodes";
 import { ProductsTable } from "@/components/vision/ProductsTable";
@@ -392,9 +50,16 @@ type ProcessResponse = {
     readout_vis_url?: string | null;
     closure_output?: string | null;
     closure_output_url?: string | null;
+    summary_json?: string | null;
+    summary_json_url?: string | null;
+    picking_shipping_json?: string | null;
+    picking_shipping_json_url?: string | null;
   };
   session_state_json?: string | null;
   session_state_json_url?: string | null;
+  shipping_result?: unknown;
+  shipping_session?: unknown;
+  shipping_event_context?: unknown;
   frontend_summary?: unknown;
   operator_feedback?: unknown;
   session?: unknown;
@@ -693,14 +358,18 @@ export default function VisionPage() {
 
   const [error, setError] = useState<string | null>(null);
 
-  const [captureData, setCaptureData] = useState<CaptureResponse | null>(null);
+  const [boxCaptureData, setBoxCaptureData] = useState<CaptureResponse | null>(null);
+  const [pickingCaptureData, setPickingCaptureData] = useState<CaptureResponse | null>(null);
+
   const [processData, setProcessData] = useState<ProcessResponse | null>(null);
   const [resetData, setResetData] = useState<ResetResponse | null>(null);
 
-  const [capturedImageUrl, setCapturedImageUrl] = useState<string | null>(null);
+  const [capturedBoxImageUrl, setCapturedBoxImageUrl] = useState<string | null>(null);
+  const [capturedPickingImageUrl, setCapturedPickingImageUrl] = useState<string | null>(null);
   const [processedImageUrl, setProcessedImageUrl] = useState<string | null>(null);
 
-  const hasCapture = Boolean(captureData?.event?.event_dir);
+  const hasBoxCapture = Boolean(boxCaptureData?.event?.event_dir);
+  const hasPickingCapture = Boolean(pickingCaptureData?.event?.event_dir);
   const hasProcess = Boolean(processData?.event?.event_dir);
 
   const closureData = useMemo(() => {
@@ -727,17 +396,26 @@ export default function VisionPage() {
     if (resetLoading) return "Reiniciando sesión...";
     if (error) return "Con error";
     if (hasProcess) return "Procesado";
-    if (hasCapture) return "Capturado";
+    if (hasBoxCapture && hasPickingCapture) return "Capturas completas";
+    if (hasBoxCapture) return "Caja capturada";
+    if (hasPickingCapture) return "Hoja picking capturada";
     return "Listo";
-  }, [captureLoading, processLoading, resetLoading, error, hasCapture, hasProcess]);
+  }, [
+    captureLoading,
+    processLoading,
+    resetLoading,
+    error,
+    hasBoxCapture,
+    hasPickingCapture,
+    hasProcess,
+  ]);
 
-  const handleCapture = async () => {
+  const handleCaptureBox = async () => {
     setCaptureLoading(true);
     setError(null);
     setResetData(null);
     setProcessData(null);
     setProcessedImageUrl(null);
-    setCapturedImageUrl(null);
 
     try {
       const response = await fetch(`${API_BASE}/vision/capture`, {
@@ -745,24 +423,65 @@ export default function VisionPage() {
       });
 
       const data: CaptureResponse = await response.json();
-      console.log("Capture response:", data);
+      console.log("Capture box response:", data);
 
       if (!response.ok) {
-        throw new Error(extractErrorMessage(data, "Error en captura"));
+        throw new Error(extractErrorMessage(data, "Error en captura de caja"));
       }
 
-      setCaptureData(data);
+      setBoxCaptureData(data);
 
       const imageUrl =
         buildAbsoluteUrl(data?.event?.frame_url) ??
         buildAbsoluteUrl(data?.event?.frame_path) ??
         null;
 
-      setCapturedImageUrl(imageUrl);
+      setCapturedBoxImageUrl(imageUrl);
     } catch (err) {
       const msg =
-        err instanceof Error ? err.message : "Error desconocido en captura";
-      console.error("Error capturando:", msg);
+        err instanceof Error ? err.message : "Error desconocido en captura de caja";
+      console.error("Error capturando caja:", msg);
+      setError(msg);
+    } finally {
+      setCaptureLoading(false);
+    }
+  };
+
+  const handleCapturePicking = async () => {
+    setCaptureLoading(true);
+    setError(null);
+    setResetData(null);
+    setProcessData(null);
+    setProcessedImageUrl(null);
+
+    try {
+      const response = await fetch(`${API_BASE}/vision/capture`, {
+        method: "POST",
+      });
+
+      const data: CaptureResponse = await response.json();
+      console.log("Capture picking response:", data);
+
+      if (!response.ok) {
+        throw new Error(
+          extractErrorMessage(data, "Error en captura de hoja de picking")
+        );
+      }
+
+      setPickingCaptureData(data);
+
+      const imageUrl =
+        buildAbsoluteUrl(data?.event?.frame_url) ??
+        buildAbsoluteUrl(data?.event?.frame_path) ??
+        null;
+
+      setCapturedPickingImageUrl(imageUrl);
+    } catch (err) {
+      const msg =
+        err instanceof Error
+          ? err.message
+          : "Error desconocido en captura de hoja de picking";
+      console.error("Error capturando hoja de picking:", msg);
       setError(msg);
     } finally {
       setCaptureLoading(false);
@@ -770,8 +489,8 @@ export default function VisionPage() {
   };
 
   const handleProcess = async () => {
-    if (!captureData?.event?.event_dir) {
-      setError("No hay una captura disponible para procesar.");
+    if (!boxCaptureData?.event?.event_dir) {
+      setError("No hay una captura de caja disponible para procesar.");
       return;
     }
 
@@ -788,7 +507,8 @@ export default function VisionPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          event_dir: captureData.event.event_dir,
+          event_dir: boxCaptureData.event.event_dir,
+          picking_image: pickingCaptureData?.event?.frame_path ?? null,
         }),
       });
 
@@ -834,9 +554,11 @@ export default function VisionPage() {
       }
 
       setResetData(data);
-      setCaptureData(null);
+      setBoxCaptureData(null);
+      setPickingCaptureData(null);
       setProcessData(null);
-      setCapturedImageUrl(null);
+      setCapturedBoxImageUrl(null);
+      setCapturedPickingImageUrl(null);
       setProcessedImageUrl(null);
     } catch (err) {
       const msg =
@@ -856,7 +578,7 @@ export default function VisionPage() {
         <div>
           <h1 style={styles.title}>Kuhne+Nagel Vision Scanner</h1>
           <p style={styles.subtitle}>
-            Flujo manual del MvP: capturar, procesar y revisar resultados.
+            Flujo manual del MvP: capturar caja, capturar hoja picking, procesar y revisar resultados.
           </p>
         </div>
 
@@ -869,13 +591,13 @@ export default function VisionPage() {
         <div style={styles.actionsHeader}>
           <h2 style={styles.sectionTitle}>Acciones</h2>
           <span style={styles.actionsHint}>
-            Ejecuta el flujo en orden: captura → procesamiento
+            Ejecuta el flujo en orden: captura caja → captura hoja picking → procesamiento
           </span>
         </div>
 
         <div style={styles.buttonRow}>
           <button
-            onClick={handleCapture}
+            onClick={handleCaptureBox}
             disabled={captureLoading || processLoading || resetLoading}
             style={{
               ...styles.button,
@@ -887,7 +609,23 @@ export default function VisionPage() {
                   : "pointer",
             }}
           >
-            {captureLoading ? "Capturando..." : "1. Capturar"}
+            {captureLoading ? "Capturando..." : "1. Capturar caja"}
+          </button>
+
+          <button
+            onClick={handleCapturePicking}
+            disabled={captureLoading || processLoading || resetLoading}
+            style={{
+              ...styles.button,
+              ...styles.secondaryButton,
+              opacity: captureLoading || processLoading || resetLoading ? 0.6 : 1,
+              cursor:
+                captureLoading || processLoading || resetLoading
+                  ? "not-allowed"
+                  : "pointer",
+            }}
+          >
+            {captureLoading ? "Capturando..." : "2. Capturar hoja picking"}
           </button>
 
           <button
@@ -896,28 +634,28 @@ export default function VisionPage() {
               processLoading ||
               captureLoading ||
               resetLoading ||
-              !captureData?.event?.event_dir
+              !boxCaptureData?.event?.event_dir
             }
             style={{
               ...styles.button,
-              ...styles.secondaryButton,
+              ...styles.processButton,
               opacity:
                 processLoading ||
                 captureLoading ||
                 resetLoading ||
-                !captureData?.event?.event_dir
+                !boxCaptureData?.event?.event_dir
                   ? 0.6
                   : 1,
               cursor:
                 processLoading ||
                 captureLoading ||
                 resetLoading ||
-                !captureData?.event?.event_dir
+                !boxCaptureData?.event?.event_dir
                   ? "not-allowed"
                   : "pointer",
             }}
           >
-            {processLoading ? "Procesando..." : "2. Procesar"}
+            {processLoading ? "Procesando..." : "3. Procesar"}
           </button>
 
           <button
@@ -947,9 +685,14 @@ export default function VisionPage() {
 
       <div style={styles.summaryGrid}>
         <SummaryCard
-          title="Captura"
-          value={hasCapture ? "Disponible" : "Pendiente"}
-          subtitle={captureData?.message ?? "Sin captura todavía"}
+          title="Captura caja"
+          value={hasBoxCapture ? "Disponible" : "Pendiente"}
+          subtitle={boxCaptureData?.message ?? "Sin captura de caja todavía"}
+        />
+        <SummaryCard
+          title="Hoja picking"
+          value={hasPickingCapture ? "Disponible" : "Pendiente"}
+          subtitle={pickingCaptureData?.message ?? "Sin captura de hoja todavía"}
         />
         <SummaryCard
           title="Procesamiento"
@@ -957,17 +700,23 @@ export default function VisionPage() {
           subtitle={processData?.message ?? "Sin procesamiento todavía"}
         />
         <SummaryCard
-          title="Evento actual"
-          value={captureData?.event?.event_dir ? "Sí" : "No"}
-          subtitle={captureData?.event?.event_dir ?? "Aún no generado"}
+          title="Evento caja actual"
+          value={boxCaptureData?.event?.event_dir ? "Sí" : "No"}
+          subtitle={boxCaptureData?.event?.event_dir ?? "Aún no generado"}
         />
       </div>
 
-      <div style={styles.grid2}>
+      <div style={styles.grid3}>
         <ImagePanel
-          title="Imagen capturada"
-          imageUrl={capturedImageUrl}
-          emptyText="Aquí aparecerá la imagen capturada del evento."
+          title="Imagen capturada de caja"
+          imageUrl={capturedBoxImageUrl}
+          emptyText="Aquí aparecerá la imagen capturada de la caja."
+        />
+
+        <ImagePanel
+          title="Imagen capturada de hoja picking"
+          imageUrl={capturedPickingImageUrl}
+          emptyText="Aquí aparecerá la imagen capturada de la hoja de picking."
         />
 
         <ImagePanel
@@ -979,17 +728,32 @@ export default function VisionPage() {
 
       <div style={styles.grid2}>
         <div style={styles.card}>
-          <h3 style={styles.cardTitle}>Datos principales de captura</h3>
-          <InfoRow label="Event dir" value={captureData?.event?.event_dir} />
-          <InfoRow label="Frame path" value={captureData?.event?.frame_path} />
-          <InfoRow label="Event json" value={captureData?.event?.event_json} />
-          <InfoRow label="Session dir" value={captureData?.session_dir} />
+          <h3 style={styles.cardTitle}>Datos principales de captura caja</h3>
+          <InfoRow label="Event dir" value={boxCaptureData?.event?.event_dir} />
+          <InfoRow label="Frame path" value={boxCaptureData?.event?.frame_path} />
+          <InfoRow label="Event json" value={boxCaptureData?.event?.event_json} />
+          <InfoRow label="Session dir" value={boxCaptureData?.session_dir} />
         </div>
 
+        <div style={styles.card}>
+          <h3 style={styles.cardTitle}>Datos principales de hoja picking</h3>
+          <InfoRow label="Event dir" value={pickingCaptureData?.event?.event_dir} />
+          <InfoRow label="Frame path" value={pickingCaptureData?.event?.frame_path} />
+          <InfoRow label="Event json" value={pickingCaptureData?.event?.event_json} />
+          <InfoRow label="Session dir" value={pickingCaptureData?.session_dir} />
+        </div>
+      </div>
+
+      <div style={styles.grid2}>
         <div style={styles.card}>
           <h3 style={styles.cardTitle}>Datos principales de procesamiento</h3>
           <InfoRow label="Readout json" value={processData?.event?.readout_json} />
           <InfoRow label="Readout vis" value={processData?.event?.readout_vis} />
+          <InfoRow label="Summary json" value={processData?.event?.summary_json} />
+          <InfoRow
+            label="Picking shipping json"
+            value={processData?.event?.picking_shipping_json}
+          />
           <InfoRow
             label="Closure output"
             value={processData?.event?.closure_output}
@@ -997,6 +761,18 @@ export default function VisionPage() {
           <InfoRow
             label="Session state json"
             value={processData?.session_state_json}
+          />
+        </div>
+
+        <div style={styles.card}>
+          <h3 style={styles.cardTitle}>Contexto operativo</h3>
+          <InfoRow
+            label="Caja procesada desde event dir"
+            value={boxCaptureData?.event?.event_dir}
+          />
+          <InfoRow
+            label="Hoja picking enviada"
+            value={pickingCaptureData?.event?.frame_path ?? "No enviada"}
           />
         </div>
       </div>
@@ -1032,6 +808,21 @@ export default function VisionPage() {
           data={processData?.frontend_summary}
         />
 
+        <SmartDataView
+          title="Resultado shipping"
+          data={processData?.shipping_result}
+        />
+
+        <SmartDataView
+          title="Sesión shipping"
+          data={processData?.shipping_session}
+        />
+
+        <SmartDataView
+          title="Contexto evento shipping"
+          data={processData?.shipping_event_context}
+        />
+
         <OperatorFeedbackView data={processData?.operator_feedback} />
 
         <JsonBlock
@@ -1046,7 +837,8 @@ export default function VisionPage() {
       </div>
 
       <div style={styles.grid1}>
-        <JsonBlock title="Respuesta captura" data={captureData} />
+        <JsonBlock title="Respuesta captura caja" data={boxCaptureData} />
+        <JsonBlock title="Respuesta captura hoja picking" data={pickingCaptureData} />
         <JsonBlock title="Respuesta procesamiento" data={processData} />
         <JsonBlock title="Respuesta reinicio sesión" data={resetData} />
       </div>
@@ -1054,7 +846,7 @@ export default function VisionPage() {
   );
 }
 
-const styles: Record<string, React.CSSProperties> = {
+const styles: Record<string, CSSProperties> = {
   page: {
     padding: 24,
     background: "#f6f8fb",
@@ -1119,7 +911,7 @@ const styles: Record<string, React.CSSProperties> = {
     flexWrap: "wrap",
   },
   button: {
-    minWidth: 180,
+    minWidth: 190,
     padding: "12px 16px",
     borderRadius: 12,
     border: "1px solid",
@@ -1134,6 +926,11 @@ const styles: Record<string, React.CSSProperties> = {
     background: "#2563eb",
   },
   secondaryButton: {
+    borderColor: "#7c3aed",
+    color: "#ffffff",
+    background: "#7c3aed",
+  },
+  processButton: {
     borderColor: "#0f766e",
     color: "#ffffff",
     background: "#0f766e",
@@ -1182,6 +979,12 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 13,
     color: "#6c7b91",
     wordBreak: "break-word",
+  },
+  grid3: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+    gap: 16,
+    marginBottom: 20,
   },
   grid2: {
     display: "grid",

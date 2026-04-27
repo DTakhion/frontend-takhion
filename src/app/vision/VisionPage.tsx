@@ -44,10 +44,23 @@
 //     event_dir: string;
 //     frame_path?: string | null;
 //     frame_url?: string | null;
+//     picking_image_path?: string | null;
+//     picking_image_url?: string | null;
+
 //     readout_json?: string | null;
 //     readout_json_url?: string | null;
 //     readout_vis?: string | null;
 //     readout_vis_url?: string | null;
+
+//     picking_debug_input?: string | null;
+//     picking_debug_input_url?: string | null;
+//     picking_debug_labeled?: string | null;
+//     picking_debug_labeled_url?: string | null;
+//     picking_debug_detected?: string | null;
+//     picking_debug_detected_url?: string | null;
+//     picking_debug_hybrid?: string | null;
+//     picking_debug_hybrid_url?: string | null;
+
 //     closure_output?: string | null;
 //     closure_output_url?: string | null;
 //     summary_json?: string | null;
@@ -366,7 +379,8 @@
 
 //   const [capturedBoxImageUrl, setCapturedBoxImageUrl] = useState<string | null>(null);
 //   const [capturedPickingImageUrl, setCapturedPickingImageUrl] = useState<string | null>(null);
-//   const [processedImageUrl, setProcessedImageUrl] = useState<string | null>(null);
+//   const [processedBoxImageUrl, setProcessedBoxImageUrl] = useState<string | null>(null);
+//   const [processedPickingImageUrl, setProcessedPickingImageUrl] = useState<string | null>(null);
 
 //   const hasBoxCapture = Boolean(boxCaptureData?.event?.event_dir);
 //   const hasPickingCapture = Boolean(pickingCaptureData?.event?.event_dir);
@@ -415,7 +429,8 @@
 //     setError(null);
 //     setResetData(null);
 //     setProcessData(null);
-//     setProcessedImageUrl(null);
+//     setProcessedBoxImageUrl(null);
+//     setProcessedPickingImageUrl(null);
 
 //     try {
 //       const response = await fetch(`${API_BASE}/vision/capture`, {
@@ -452,7 +467,8 @@
 //     setError(null);
 //     setResetData(null);
 //     setProcessData(null);
-//     setProcessedImageUrl(null);
+//     setProcessedBoxImageUrl(null);
+//     setProcessedPickingImageUrl(null);
 
 //     try {
 //       const response = await fetch(`${API_BASE}/vision/capture`, {
@@ -498,7 +514,8 @@
 //     setError(null);
 //     setResetData(null);
 //     setProcessData(null);
-//     setProcessedImageUrl(null);
+//     setProcessedBoxImageUrl(null);
+//     setProcessedPickingImageUrl(null);
 
 //     try {
 //       const response = await fetch(`${API_BASE}/vision/process`, {
@@ -521,12 +538,20 @@
 
 //       setProcessData(data);
 
-//       const annotatedUrl =
+//       const processedBoxUrl =
 //         buildAbsoluteUrl(data?.event?.readout_vis_url) ??
 //         buildAbsoluteUrl(data?.event?.readout_vis) ??
 //         null;
 
-//       setProcessedImageUrl(annotatedUrl);
+//       const processedPickingUrl =
+//         buildAbsoluteUrl(data?.event?.picking_debug_hybrid_url) ??
+//         buildAbsoluteUrl(data?.event?.picking_debug_hybrid) ??
+//         buildAbsoluteUrl(data?.event?.picking_debug_detected_url) ??
+//         buildAbsoluteUrl(data?.event?.picking_debug_detected) ??
+//         null;
+
+//       setProcessedBoxImageUrl(processedBoxUrl);
+//       setProcessedPickingImageUrl(processedPickingUrl);
 //     } catch (err) {
 //       const msg =
 //         err instanceof Error ? err.message : "Error desconocido en procesamiento";
@@ -559,7 +584,8 @@
 //       setProcessData(null);
 //       setCapturedBoxImageUrl(null);
 //       setCapturedPickingImageUrl(null);
-//       setProcessedImageUrl(null);
+//       setProcessedBoxImageUrl(null);
+//       setProcessedPickingImageUrl(null);
 //     } catch (err) {
 //       const msg =
 //         err instanceof Error
@@ -706,7 +732,7 @@
 //         />
 //       </div>
 
-//       <div style={styles.grid3}>
+//       <div style={styles.grid4}>
 //         <ImagePanel
 //           title="Imagen capturada de caja"
 //           imageUrl={capturedBoxImageUrl}
@@ -720,9 +746,15 @@
 //         />
 
 //         <ImagePanel
-//           title="Imagen con detección / readout"
-//           imageUrl={processedImageUrl}
-//           emptyText="Aquí aparecerá la visualización procesada cuando ejecutes el readout."
+//           title="Caja procesada: detección / readout"
+//           imageUrl={processedBoxImageUrl}
+//           emptyText="Aquí aparecerá la visualización procesada de la caja."
+//         />
+
+//         <ImagePanel
+//           title="Hoja picking procesada"
+//           imageUrl={processedPickingImageUrl}
+//           emptyText="Aquí aparecerá la visualización procesada de la hoja de picking."
 //         />
 //       </div>
 
@@ -749,6 +781,14 @@
 //           <h3 style={styles.cardTitle}>Datos principales de procesamiento</h3>
 //           <InfoRow label="Readout json" value={processData?.event?.readout_json} />
 //           <InfoRow label="Readout vis" value={processData?.event?.readout_vis} />
+//           <InfoRow
+//             label="Picking debug hybrid"
+//             value={processData?.event?.picking_debug_hybrid}
+//           />
+//           <InfoRow
+//             label="Picking debug detected"
+//             value={processData?.event?.picking_debug_detected}
+//           />
 //           <InfoRow label="Summary json" value={processData?.event?.summary_json} />
 //           <InfoRow
 //             label="Picking shipping json"
@@ -986,6 +1026,12 @@
 //     gap: 16,
 //     marginBottom: 20,
 //   },
+//   grid4: {
+//     display: "grid",
+//     gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+//     gap: 16,
+//     marginBottom: 20,
+//   },
 //   grid2: {
 //     display: "grid",
 //     gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))",
@@ -1195,9 +1241,28 @@ type ClosureResultData = {
   [key: string]: unknown;
 };
 
+type TargetShippingSummary = {
+  status?: string | null;
+  shipping?: string | null;
+  ruta?: string | null;
+  sku?: string | null;
+  expected_units?: number | null;
+  observed_units?: number | null;
+  difference_units?: number | null;
+  matched_items?: Array<Record<string, unknown>>;
+  barcode_hits_in_target_shipping?: Record<string, number>;
+  resolution_status?: string | null;
+  resolved_from_barcode?: string | null;
+};
+
 type ProcessResponse = {
   status?: string;
   message?: string;
+  target_shipping_summary?: TargetShippingSummary | null;
+  target_shipping_resolution?: unknown;
+  target_shipping_observation?: unknown;
+  target_shipping_complete?: boolean | null;
+  effective_closure_status?: string | null;
   event?: {
     event_dir: string;
     frame_path?: string | null;
@@ -1518,6 +1583,56 @@ function SummaryCard({
       <div style={styles.summaryTitle}>{title}</div>
       <div style={styles.summaryValue}>{value}</div>
       {subtitle ? <div style={styles.summarySubtitle}>{subtitle}</div> : null}
+    </div>
+  );
+}
+
+function TargetShippingSummaryView({
+  data,
+}: {
+  data?: TargetShippingSummary | null;
+}) {
+  if (!data) return null;
+
+  const expected = Number(data.expected_units ?? 0);
+  const observed = Number(data.observed_units ?? 0);
+  const difference = Number(data.difference_units ?? expected - observed);
+
+  return (
+    <div style={styles.card}>
+      <h3 style={styles.cardTitle}>Resumen orden / shipping objetivo</h3>
+
+      <div style={styles.summaryGrid}>
+        <SummaryCard
+          title="Estado"
+          value={renderPrimitive(data.status)}
+          subtitle={renderPrimitive(data.resolution_status)}
+        />
+        <SummaryCard
+          title="Shipping"
+          value={renderPrimitive(data.shipping)}
+          subtitle={data.ruta ? `Ruta: ${data.ruta}` : undefined}
+        />
+        <SummaryCard title="Unidades esperadas" value={String(expected)} />
+        <SummaryCard
+          title="Unidades observadas"
+          value={String(observed)}
+          subtitle={`Diferencia: ${difference}`}
+        />
+      </div>
+
+      <InfoRow label="SKU objetivo" value={data.sku ?? undefined} />
+      <InfoRow
+        label="Resuelto desde barcode"
+        value={data.resolved_from_barcode ?? undefined}
+      />
+
+      {data.matched_items && data.matched_items.length > 0 ? (
+        <SmartDataView
+          title="Items detectados dentro del shipping"
+          data={data.matched_items}
+        />
+      ) : null}
     </div>
   );
 }
@@ -1974,6 +2089,8 @@ export default function VisionPage() {
           />
         </div>
       </div>
+
+      <TargetShippingSummaryView data={processData?.target_shipping_summary} />
 
       {closureData && (
         <div style={styles.grid1}>
